@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Screener Camera Switcher</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #111;
+      color: #eee;
+      text-align: center;
+      padding: 20px;
+    }
+    button {
+      margin: 8px;
+      padding: 12px 20px;
+      font-size: 16px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      background: #333;
+      color: #eee;
+    }
+    button:hover { background: #555; }
+    #status {
+      margin-top: 20px;
+      font-weight: bold;
+      font-size: 18px;
+      color: #0f0;
+    }
+  </style>
+</head>
+<body>
+  <h1>Screener Camera Switcher</h1>
+  <div id="buttons"></div>
+  <button onclick="send('/test')">Test Pattern</button>
+  <div id="status">STATUS: ...</div>
+
+  <script>
+    // Hardcode 6 cameras (or adjust number if needed)
+    const devices = ["Camera 0", "Camera 1", "Camera 2"];
+
+    function buildButtons() {
+      const div = document.getElementById("buttons");
+      devices.forEach((dev, idx) => {
+        let btn = document.createElement("button");
+        btn.innerText = "Switch to " + dev;
+        btn.onclick = () => send(`/switch/${idx}`, "POST");
+        div.appendChild(btn);
+      });
+    }
+
+    function send(url, method = "POST") {
+      fetch(url, { method: method })
+        .then(r => r.json())
+        .then(updateStatus)
+        .catch(err => console.error(err));
+    }
+
+    function updateStatus(data) {
+      if (data.status) {
+        document.getElementById("status").innerText = data.status;
+      } else if (data.result) {
+        document.getElementById("status").innerText = data.result;
+      }
+    }
+
+    function pollStatus() {
+      fetch('/status')
+        .then(r => r.json())
+        .then(updateStatus)
+        .catch(err => console.error(err));
+    }
+
+    buildButtons();
+    setInterval(pollStatus, 2000);
+    pollStatus();
+  </script>
+</body>
+</html>
